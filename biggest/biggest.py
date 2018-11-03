@@ -9,7 +9,7 @@ class File(object):
         self._parent = parent
 
     def __lt__(self, other):
-        return (self.size < other.size) or (self.size == other.size and self.path < other.path)
+        return (self.size > other.size) or (self.size == other.size and self.path < other.path)
         
     @property
     def path(self):
@@ -47,8 +47,8 @@ class Directory(object):
         self._all_children = None
 
     def __lt__(self, other):
-        return (self.size < other.size) or (self.size == other.size and self.path < other.path)
-        
+        return (self.size > other.size) or (self.size == other.size and self.path < other.path)
+
     @property
     def parent(self):
         return self._parent
