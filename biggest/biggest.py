@@ -4,6 +4,7 @@ import os
 class File(object):
     def __init__(self, path, parent=None):
         self._path = path
+        self._name = os.path.basename(path)
         self._size = None
         self._parent = parent
 
@@ -13,6 +14,10 @@ class File(object):
     @property
     def path(self):
         return self._path
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def parent(self):
@@ -31,7 +36,10 @@ class File(object):
 
 class Directory(object):
     def __init__(self, path, parent=None, num_biggest=None):
+        if path.endswith('/'):
+            path = path[:-1]
         self._path = path
+        self._name = os.path.basename(path)
         self._size = None
         self._children = None
         self._parent = parent
