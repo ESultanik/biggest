@@ -1,3 +1,4 @@
+import heapq
 import os
 
 class Directory(object):
@@ -19,18 +20,26 @@ class Directory(object):
     @property
     def children(self):
         if self._children is None:
-            self._children = []
+            children = []
+            self._size = 0
             for child in os.scandir(self.path):
                 if child.is_dir(follow_symlinks=False):
-                    self._children.append(Directory(child.path))
+                    child = Directory(child.path)
                 else:
-                    self._children.append(File(child.path))
+                    child = File(child.path)
+                self._size += child.size
+                children.append(child)
+            if self._num_biggest is None:
+                self._children = tuple(children)
+            else:
+                self._children = tuple(heapq.nlargest(self._num_biggest, children, key=lambda child : child.size))
         return self._children
 
     @property
     def size(self):
         if self._size is None:
-            self._size = sum(child.size for child in self.children)
+            # self._size is set when we enumerate our children
+            self.children
         return self._size
 
     def __str__(self):
@@ -61,4 +70,4 @@ class File(object):
 if __name__ == '__main__':
     import sys
     for path in sys.argv[1:]:
-        print((path, Directory(path).size))
+        print((path, Directory(path, num_biggest=10).children))
