@@ -1,6 +1,26 @@
 import heapq
 import os
 
+class File(object):
+    def __init__(self, path):
+        self._path = path
+        self._size = None
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def size(self):
+        if self._size is None:
+            self._size = os.stat(path, follow_symlinks=False).st_size
+        return self._size
+
+    def __str__(self):
+        return self.path
+
+    __repr__ = __str__
+
 class Directory(object):
     def __init__(self, path, parent=None, num_biggest=None):
         self._path = path
@@ -40,26 +60,6 @@ class Directory(object):
         if self._size is None:
             # self._size is set when we enumerate our children
             self.children
-        return self._size
-
-    def __str__(self):
-        return self.path
-
-    __repr__ = __str__
-
-class File(object):
-    def __init__(self, path):
-        self._path = path
-        self._size = None
-
-    @property
-    def path(self):
-        return self._path
-
-    @property
-    def size(self):
-        if self._size is None:
-            self._size = os.stat(path, follow_symlinks=False).st_size
         return self._size
 
     def __str__(self):
