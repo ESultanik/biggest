@@ -2,9 +2,10 @@ import heapq
 import os
 
 class File(object):
-    def __init__(self, path):
+    def __init__(self, path, parent=None):
         self._path = path
         self._size = None
+        self._parent = parent
 
     def __lt__(self, other):
         return (self.size < other.size) or (self.size == other.size and self.path < other.path)
@@ -12,6 +13,10 @@ class File(object):
     @property
     def path(self):
         return self._path
+
+    @property
+    def parent(self):
+        return self._parent
 
     @property
     def size(self):
@@ -50,7 +55,7 @@ class Directory(object):
             if child.is_dir(follow_symlinks=False):
                 ret = Directory(child.path, parent=self, num_biggest=self._num_biggest)
             else:
-                ret = File(child.path)
+                ret = File(child.path, parent=self)
             if self._size is None:
                 to_yield.append(ret)
             else:
@@ -60,29 +65,23 @@ class Directory(object):
             for child in to_yield:
                 yield child
 
-    def biggest(self, n, include_self=False):
+    def biggest(self, n):
         ret = []
         size = 0
-        children = set()
         for child in self._get_children():
-            children.add(child)
             if isinstance(child, File):
-                heapq.heappush(ret, (-child.size, child))
+                heapq.heappush(ret, (-child.size, child.path, child))
                 size += child.size
             else:
-                for descendant in child.biggest(n, include_self=True):
-                    heapq.heappush(ret, (-descendant.size, descendant))
+                child_size = child.size
+                for descendant in child.biggest(n):
+                    if descendant.parent == child:
+                        child_size -= descendant.size
+                    heapq.heappush(ret, (-descendant.size, descendant.path, descendant))
+                heapq.heappush(ret, (-child_size, child.path, child))
         num_to_yield = min(len(ret), n)
         for i in range(num_to_yield):
-            _, element = heapq.heappop(ret)
-            if element in children:
-                # don't include the sizes of direct children we've yielded
-                size -= element.size
-            if include_self and i == num_to_yield - 1 and size > element.size:
-                # we've already yielded all of our children and we are still bigger, so yield ourselves
-                yield self
-            else:
-                yield element
+            yield heapq.heappop(ret)[2]
 
     @property
     def children(self):
