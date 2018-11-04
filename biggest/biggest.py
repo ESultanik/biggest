@@ -1,6 +1,8 @@
 import heapq
 import os
 
+from heap import MutableHeap
+
 class FilesystemObject(object):
     def __init__(self, path, parent=None):
         self._path = path
@@ -28,10 +30,18 @@ class FilesystemObject(object):
     def __lt__(self, other):
         return (self.size > other.size) or (self.size == other.size and self.path < other.path)
 
+    def __le__(self, other):
+        return (self.size >= other.size) or (self.size == other.size and self.path <= other.path)
+    
     def __str__(self):
         return self.path
 
     __repr__ = __str__        
+
+class _ModifiedSize(FilesystemObject):
+    def __init__(self, path, size):
+        super().__init__(path)
+        self.size = size
 
 class File(FilesystemObject):
     def __init__(self, path, parent=None):
@@ -98,7 +108,19 @@ class Directory(FilesystemObject):
 
     def biggest(self, n, include_directories=True):
         biggest_files, biggest_directories = self._biggest(n, include_directories=include_directories)
-        return biggest_files + biggest_directories
+        biggest_directories = MutableHeap(d for d in biggest_directories)
+        yielded = 0
+        while yielded < n and (biggest_files or biggest_directories):
+            if not biggest_directories or (biggest_files and biggest_directories.peek() <= biggest_files[0]):
+                yield biggest_files[0]
+                if biggest_files[0].parent in biggest_directories:
+                    value = biggest_directories[biggest_files[0].parent]
+                    biggest_directories.remove(biggest_files[0].parent)
+                    biggest_directories.push(biggest_files[0].parent, value=_ModifiedSize(value.path, value.size - biggest_files[0].size))
+                biggest_files = biggest_files[1:]
+            else:
+                yield biggest_directories.pop()
+            yielded += 1
 
     @property
     def children(self):

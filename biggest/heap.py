@@ -1,12 +1,16 @@
 import heapq
 
 class MutableHeapElement(object):
-    def __init__(self, element, removed=False):
+    def __init__(self, element, key=None, removed=False):
         self.element = element
         self.removed = removed
+        if key is None:
+            self.key = self.element
+        else:
+            self.key = key
 
     def __lt__(self, other):
-        return self.element < other.element
+        return self.key < other.key
 
 class MutableHeap(object):
     def __init__(self, elements=None):
@@ -50,6 +54,16 @@ class MutableHeap(object):
             raise LookupError('The heap is empty')
         return self._heap[0].element
 
+    def peek_value(self):
+        if not self._heap:
+            raise LookupError('The heap is empty')
+        return self._heap[0].key
+
+    def __getitem__(self, element):
+        for e in sorted(self._elements[element]):
+            if not e.removed:
+                return e.key
+
     def pop(self):
         while self._heap:
             ret = heapq.heappop(self._heap)
@@ -61,8 +75,8 @@ class MutableHeap(object):
                 return ret.element
         raise LookupError('The heap is empty')
 
-    def push(self, element):
-        e = MutableHeapElement(element)
+    def push(self, element, value=None):
+        e = MutableHeapElement(element, key=value)
         if element in self._elements:
             self._elements[element].append(e)
         else:
