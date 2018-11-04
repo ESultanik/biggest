@@ -32,8 +32,8 @@ class File(object):
     def __str__(self):
         return self.path
 
-    __repr__ = __str__
-
+    __repr__ = __str__        
+    
 class Directory(object):
     def __init__(self, path, parent=None, num_biggest=None):
         if path.endswith('/'):
@@ -73,23 +73,35 @@ class Directory(object):
             for child in to_yield:
                 yield child
 
-    def biggest(self, n):
-        ret = []
+    def _biggest(self, n, include_directories=True):
+        files = []
         size = 0
+        directories = []
         for child in self._get_children():
             if isinstance(child, File):
-                heapq.heappush(ret, (-child.size, child.path, child))
+                heapq.heappush(files, (-child.size, child.path, child))
                 size += child.size
             else:
-                child_size = child.size
-                for descendant in child.biggest(n):
-                    if descendant.parent == child:
-                        child_size -= descendant.size
-                    heapq.heappush(ret, (-descendant.size, descendant.path, descendant))
-                heapq.heappush(ret, (-child_size, child.path, child))
-        num_to_yield = min(len(ret), n)
-        for i in range(num_to_yield):
-            yield heapq.heappop(ret)[2]
+                child_files, child_dirs = child._biggest(n)
+                for descendant in child_files:
+                    heapq.heappush(files, (-descendant.size, descendant.path, descendant))
+                if include_directories:
+                    directories.append(child)
+                    directories += child_dirs
+        num_files = min(len(files), n)
+        biggest_files = list(heapq.heappop(files)[2] for i in range(num_files))
+        if include_directories:
+            if biggest_files:
+                biggest_directories = list(d for d in directories if d.size >= biggest_files[-1].size)
+            else:
+                biggest_directories = directories
+        else:
+            biggest_directories = ()
+        return biggest_files, biggest_directories
+
+    def biggest(self, n, include_directories=True):
+        biggest_files, biggest_directories = self._biggest(n, include_directories=include_directories)
+        return biggest_files + biggest_directories
 
     @property
     def children(self):
