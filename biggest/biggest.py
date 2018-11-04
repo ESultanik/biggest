@@ -1,16 +1,12 @@
 import heapq
 import os
 
-class File(object):
+class FilesystemObject(object):
     def __init__(self, path, parent=None):
         self._path = path
-        self._name = os.path.basename(path)
-        self._size = None
         self._parent = parent
+        self._name = os.path.basename(path)
 
-    def __lt__(self, other):
-        return (self.size > other.size) or (self.size == other.size and self.path < other.path)
-        
     @property
     def path(self):
         return self._path
@@ -23,39 +19,40 @@ class File(object):
     def parent(self):
         return self._parent
 
-    @property
-    def size(self):
-        if self._size is None:
-            self._size = os.stat(self.path, follow_symlinks=False).st_size
-        return self._size
+    def __hash__(self):
+        return hash(self.path)
+
+    def __eq__(self, other):
+        return self.path == other.path
+
+    def __lt__(self, other):
+        return (self.size > other.size) or (self.size == other.size and self.path < other.path)
 
     def __str__(self):
         return self.path
 
     __repr__ = __str__        
+
+class File(FilesystemObject):
+    def __init__(self, path, parent=None):
+        super().__init__(path, parent=parent)
+        self._size = None
+
+    @property
+    def size(self):
+        if self._size is None:
+            self._size = os.stat(self.path, follow_symlinks=False).st_size
+        return self._size
     
-class Directory(object):
+class Directory(FilesystemObject):
     def __init__(self, path, parent=None, num_biggest=None):
         if path.endswith('/'):
             path = path[:-1]
-        self._path = path
-        self._name = os.path.basename(path)
+        super().__init__(path, parent=parent)
         self._size = None
         self._children = None
-        self._parent = parent
         self._num_biggest = num_biggest
         self._all_children = None
-
-    def __lt__(self, other):
-        return (self.size > other.size) or (self.size == other.size and self.path < other.path)
-
-    @property
-    def parent(self):
-        return self._parent
-
-    @property
-    def path(self):
-        return self._path
 
     def _get_children(self):
         to_yield = []
@@ -118,11 +115,6 @@ class Directory(object):
             # self._size is set when we enumerate our children
             tuple(self._get_children())
         return self._size
-    
-    def __str__(self):
-        return self.path
-
-    __repr__ = __str__
 
 if __name__ == '__main__':
     import sys
