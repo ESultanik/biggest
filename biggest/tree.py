@@ -1,7 +1,14 @@
 import os
 import sys
 
+from colorama import Fore, Back, Style, init
+init()
+
+from biggest import Directory
+
 def _print_single(obj, stdout, stderr, parent_indents, last, parent, biggest):
+    stderr.write(Style.RESET_ALL)
+    stderr.write(Style.DIM)
     for indent in parent_indents[:-1]:
         if indent:
             stderr.write('│   ')
@@ -9,11 +16,11 @@ def _print_single(obj, stdout, stderr, parent_indents, last, parent, biggest):
             stderr.write('    ')
     if parent_indents:
         if last:
-            sys.stderr.write('└── ')
+            stderr.write('└── ')
         else:
-            sys.stderr.write('├── ')
-    sys.stderr.write(f"[{obj.size}] ")
-    sys.stderr.flush()
+            stderr.write('├── ')
+    stderr.write(f"{Style.NORMAL}{Fore.WHITE}[{Fore.RED}{obj.size}{Fore.WHITE}]{Style.RESET_ALL} ")
+    stderr.flush()
     path = obj.path
     if parent is not None:
         path = os.path.relpath(path, start=parent.path)
@@ -21,13 +28,20 @@ def _print_single(obj, stdout, stderr, parent_indents, last, parent, biggest):
     else:
         basepath = ''
     if obj in biggest:
-        out_stream = sys.stdout
+        stderr.write(Style.BRIGHT)
+        out_stream = stdout
     else:
-        out_stream = sys.stderr
+        stderr.write(Style.DIM)
+        out_stream = stderr
+    if isinstance(obj, Directory):
+        stderr.write(Fore.BLUE)
+    else:
+        stderr.write(Fore.WHITE)
+    stderr.flush()
     out_stream.write(f"{basepath}")
     out_stream.flush()
-    sys.stderr.write('\x1B[1D \x1B[1D' * len(basepath))
-    sys.stderr.flush()
+    stderr.write('\x1B[1D \x1B[1D' * len(basepath))
+    stderr.flush()
     out_stream.write(f"{path}\n")
     out_stream.flush()    
 
