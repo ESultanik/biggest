@@ -6,7 +6,19 @@ init()
 
 from biggest import Directory
 
-def _print_single(obj, stdout, stderr, parent_indents, last, parent, biggest):
+def human_readable_size(num_bytes):
+    if num_bytes >= 1024**4:
+        return str(int(num_bytes / 1024**4 + 0.5)) + ' TB'
+    elif num_bytes >= 1024**3:
+        return str(int(num_bytes / 1024**3 + 0.5)) + ' GB'
+    elif num_bytes >= 1024**2:
+        return str(int(num_bytes / 1024**2 + 0.5)) + ' MB'
+    elif num_bytes >= 1024:
+        return str(int(num_bytes / 1024 + 0.5)) + ' KB'
+    else:
+        return str(num_bytes) + ' B'
+
+def _print_single(obj, stdout, stderr, parent_indents, last, parent, human_readable, biggest):
     stderr.write(Style.RESET_ALL)
     stderr.write(Style.DIM)
     for indent in parent_indents[:-1]:
@@ -19,7 +31,10 @@ def _print_single(obj, stdout, stderr, parent_indents, last, parent, biggest):
             stderr.write('└── ')
         else:
             stderr.write('├── ')
-    stderr.write(f"{Style.NORMAL}{Fore.WHITE}[{Fore.RED}{obj.size}{Fore.WHITE}]{Style.RESET_ALL} ")
+    size = obj.size
+    if human_readable:
+        size = human_readable_size(size)
+    stderr.write(f"{Style.NORMAL}{Fore.WHITE}[{Fore.RED}{size}{Fore.WHITE}]{Style.RESET_ALL} ")
     stderr.flush()
     path = obj.path
     if parent is not None:
@@ -45,19 +60,20 @@ def _print_single(obj, stdout, stderr, parent_indents, last, parent, biggest):
     out_stream.write(f"{path}\n")
     out_stream.flush()    
 
-def _print_tree(directory, stdout, stderr, parent_indents=(), last=False, parent=None, _biggest=None):
+def _print_tree(directory, stdout, stderr, parent_indents=(), last=False, parent=None, human_readable=False, _biggest=None):
     if _biggest is None:
         _biggest = frozenset(directory.children)
-    _print_single(directory, stdout, stderr, parent_indents, last, parent, biggest=_biggest)
+    _print_single(directory, stdout, stderr, parent_indents, last, parent, human_readable=human_readable, biggest=_biggest)
     for i, child in enumerate(directory.children):
         last_child = i == len(directory.children) - 1
-        _print_tree(child, stdout, stderr, parent_indents + ([True,False][last],), last=last_child, parent=directory, _biggest=_biggest)
+        _print_tree(child, stdout, stderr, parent_indents + ([True,False][last],), last=last_child, parent=directory, human_readable=human_readable, _biggest=_biggest)
+    stderr.write(Style.RESET_ALL)
 
-def print_tree(directory, stdout=sys.stdout, stderr=sys.stderr):
-    _print_tree(directory, stdout, stderr)
+def print_tree(directory, stdout=sys.stdout, stderr=sys.stderr, human_readable=False):
+    _print_tree(directory, stdout, stderr, human_readable=human_readable)
 
 if __name__ == '__main__':
     import biggest
 
     for path in sys.argv[1:]:
-        print_tree(biggest.Directory(path, num_biggest=20))
+        print_tree(biggest.Directory(path, num_biggest=20), human_readable=True)
