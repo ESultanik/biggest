@@ -78,7 +78,7 @@ an example:
 
 Why does Biggest use this algorithm? Since a directory is always at least as large as its largest file, then, if Biggest didn’t use this algorithm, it would always return the directories containing the largest files!
 
-Biggest uses a very efficient (and perhaps optimal) implementation of this algorithm. The worst case runtime is roughly _O_(𝑛 log 𝑚), where 𝑛 is the `-n` argument passed to Biggest and 𝑚 is the number of files and directories being analyzed, but validating that is left as an exercise for the reader.
+Biggest uses a very efficient (and perhaps optimal) implementation of this algorithm. The worst case runtime is roughly _O_(𝑛 log 𝑚), where 𝑛 is the `-n` argument passed to Biggest and 𝑚 is the number of files and directories being analyzed, but validating that is left as an exercise for the reader.
 
 ## Options
 
