@@ -79,7 +79,7 @@ class Directory(FilesystemObject):
             else:
                 yield ret
         if self._size is None:
-            self._size = sum(child.size for child in to_yield)
+            self._size = sum(child.size for child in to_yield if isinstance(child, File))
             for child in to_yield:
                 yield child
 
