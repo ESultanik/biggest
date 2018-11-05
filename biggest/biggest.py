@@ -56,6 +56,10 @@ class File(FilesystemObject):
         if self._size is None:
             self._size = os.stat(self.path, follow_symlinks=False).st_size
         return self._size
+
+    @property
+    def children(self):
+        return ()
     
 class Directory(FilesystemObject):
     def __init__(self, path, parent=None, num_biggest=None):
