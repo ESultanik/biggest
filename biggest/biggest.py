@@ -39,8 +39,11 @@ class FilesystemObject(object):
     __repr__ = __str__        
 
 class _ModifiedSize(FilesystemObject):
-    def __init__(self, path, size):
-        super().__init__(path)
+    def __init__(self, original, size):
+        super().__init__(original.path)
+        while isinstance(original, _ModifiedSize):
+            original = original.original
+        self.original = original
         self.size = size
 
 class File(FilesystemObject):
@@ -109,18 +112,32 @@ class Directory(FilesystemObject):
     def biggest(self, n, include_directories=True):
         biggest_files, biggest_directories = self._biggest(n, include_directories=include_directories)
         biggest_directories = MutableHeap(d for d in biggest_directories)
-        yielded = 0
-        while yielded < n and (biggest_files or biggest_directories):
-            if not biggest_directories or (biggest_files and biggest_directories.peek() <= biggest_files[0]):
-                yield biggest_files[0]
+        ret = []
+        returned_dirs = {}
+        while len(ret) < n and (biggest_files or biggest_directories):
+            if not biggest_directories or (biggest_files and biggest_directories.peek() >= biggest_files[0]):
+                ret.append(biggest_files[0])
                 if biggest_files[0].parent in biggest_directories:
                     value = biggest_directories[biggest_files[0].parent]
                     biggest_directories.remove(biggest_files[0].parent)
-                    biggest_directories.push(biggest_files[0].parent, value=_ModifiedSize(value.path, value.size - biggest_files[0].size))
+                    biggest_directories.push(biggest_files[0].parent, value=_ModifiedSize(value, value.size - biggest_files[0].size))
+                elif biggest_files[0].parent is not None and biggest_files[0].parent.path in returned_dirs:
+                    # we already returned this directory, but its size should decrease now that this file was added
+                    parent_dir = returned_dirs[biggest_files[0].parent.path]
+                    del returned_dirs[biggest_files[0].parent.path]
+                    for i in range(len(ret)):
+                        if ret[i].path == parent_dir.path:
+                            del ret[i]
+                            break
+                    biggest_directories.push(biggest_files[0].parent, value=_ModifiedSize(parent_dir, parent_dir.size - biggest_files[0].size))
                 biggest_files = biggest_files[1:]
             else:
-                yield biggest_directories.pop()
-            yielded += 1
+                retdir = biggest_directories.pop()
+                returned_dirs[retdir.path] = retdir
+                if isinstance(retdir, _ModifiedSize):
+                    retdir = retdir.original
+                ret.append(retdir)
+        return sorted(ret)
 
     @property
     def children(self):
