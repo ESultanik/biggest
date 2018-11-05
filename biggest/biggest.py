@@ -62,7 +62,7 @@ class File(FilesystemObject):
         return ()
     
 class Directory(FilesystemObject):
-    def __init__(self, path, parent=None, num_biggest=None):
+    def __init__(self, path, parent=None, num_biggest=None, include_directories=True):
         if path.endswith('/'):
             path = path[:-1]
         super().__init__(path, parent=parent)
@@ -70,6 +70,7 @@ class Directory(FilesystemObject):
         self._children = None
         self._num_biggest = num_biggest
         self._all_children = None
+        self._include_directories = include_directories
 
     def _get_children(self):
         to_yield = []
@@ -87,7 +88,7 @@ class Directory(FilesystemObject):
             for child in to_yield:
                 yield child
 
-    def _biggest(self, n, include_directories=True):
+    def _biggest(self, n):
         files = []
         size = 0
         directories = []
@@ -99,12 +100,12 @@ class Directory(FilesystemObject):
                 child_files, child_dirs = child._biggest(n)
                 for descendant in child_files:
                     heapq.heappush(files, (-descendant.size, descendant.path, descendant))
-                if include_directories:
+                if self._include_directories:
                     directories.append(child)
                     directories += child_dirs
         num_files = min(len(files), n)
         biggest_files = list(heapq.heappop(files)[2] for i in range(num_files))
-        if include_directories:
+        if self._include_directories:
             if biggest_files:
                 biggest_directories = list(d for d in directories if d.size >= biggest_files[-1].size)
             else:
@@ -113,8 +114,8 @@ class Directory(FilesystemObject):
             biggest_directories = ()
         return biggest_files, biggest_directories
 
-    def biggest(self, n, include_directories=True):
-        biggest_files, biggest_directories = self._biggest(n, include_directories=include_directories)
+    def biggest(self, n):
+        biggest_files, biggest_directories = self._biggest(n)
         biggest_directories = MutableHeap(d for d in biggest_directories)
         ret = []
         returned_dirs = {}
