@@ -4,7 +4,7 @@ import sys
 from colorama import Fore, Back, Style, init
 init()
 
-from biggest import Directory
+from .biggest import Directory
 
 def human_readable_size(num_bytes):
     if num_bytes >= 1024**4:

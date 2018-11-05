@@ -1,8 +1,8 @@
 import argparse
 import sys
 
-import biggest
-import tree
+from . import biggest
+from . import tree
 
 def main(argv = None):
     parser = argparse.ArgumentParser(description='A utility for finding the largest files and directories', add_help=False)

@@ -1,7 +1,7 @@
 import heapq
 import os
 
-from heap import MutableHeap
+from .heap import MutableHeap
 
 class FilesystemObject(object):
     def __init__(self, path, parent=None):
