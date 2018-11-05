@@ -82,8 +82,8 @@ Biggest uses a very efficient (and perhaps optimal) implementation of this algor
 
 ## Options
 
-- *`-f`* ignore directories and only find the largest files
-- *`-h`* prints file sizes with human-readable unit suffixes like "MB" and "GB"
+- **`-f`** ignore directories and only find the largest files
+- **`-h`** prints file sizes with human-readable unit suffixes like "MB" and "GB"
 
 ## Requirements
 
