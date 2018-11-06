@@ -121,20 +121,21 @@ class Directory(FilesystemObject):
         returned_dirs = {}
         while len(ret) < n and (biggest_files or biggest_directories):
             if not biggest_directories or (biggest_files and biggest_directories.peek() >= biggest_files[0]):
-                ret.append(biggest_files[0])
-                if biggest_files[0].parent in biggest_directories:
-                    value = biggest_directories[biggest_files[0].parent]
-                    biggest_directories.remove(biggest_files[0].parent)
-                    biggest_directories.push(biggest_files[0].parent, value=_ModifiedSize(value, value.size - biggest_files[0].size))
-                elif biggest_files[0].parent is not None and biggest_files[0].parent.path in returned_dirs:
+                biggest_file = biggest_files[0]
+                ret.append(biggest_file)
+                if biggest_file.parent in biggest_directories:
+                    value = biggest_directories[biggest_file.parent]
+                    biggest_directories.remove(biggest_file.parent)
+                    biggest_directories.push(biggest_file.parent, value=_ModifiedSize(value, value.size - biggest_file.size))
+                elif biggest_file.parent is not None and biggest_file.parent.path in returned_dirs:
                     # we already returned this directory, but its size should decrease now that this file was added
-                    parent_dir = returned_dirs[biggest_files[0].parent.path]
-                    del returned_dirs[biggest_files[0].parent.path]
+                    parent_dir = returned_dirs[biggest_file.parent.path]
+                    del returned_dirs[biggest_file.parent.path]
                     for i in range(len(ret)):
                         if ret[i].path == parent_dir.path:
                             del ret[i]
                             break
-                    biggest_directories.push(biggest_files[0].parent, value=_ModifiedSize(parent_dir, parent_dir.size - biggest_files[0].size))
+                    biggest_directories.push(biggest_file.parent, value=_ModifiedSize(parent_dir, parent_dir.size - biggest_file.size))
                 biggest_files = biggest_files[1:]
             else:
                 retdir = biggest_directories.pop()
