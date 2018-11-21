@@ -8,6 +8,7 @@ class FilesystemObject(object):
         self._path = path
         self._parent = parent
         self._name = os.path.basename(path)
+        self._selected = False
 
     @property
     def path(self):
@@ -20,6 +21,14 @@ class FilesystemObject(object):
     @property
     def parent(self):
         return self._parent
+
+    @property
+    def selected(self):
+        return self._selected
+
+    @selected.setter
+    def selected(self, is_selected):
+        self._selected = is_selected
 
     def __hash__(self):
         return hash(self.path)
@@ -72,6 +81,15 @@ class Directory(FilesystemObject):
         self._all_children = None
         self._include_directories = include_directories
 
+    @FilesystemObject.selected.getter
+    def selected(self):
+        if super.selected():
+            return True
+        for child in self.children():
+            if child.selected():
+                return True
+        return False
+        
     def _get_children(self):
         to_yield = []
         for child in os.scandir(self.path):
@@ -143,6 +161,8 @@ class Directory(FilesystemObject):
                 if isinstance(retdir, _ModifiedSize):
                     retdir = retdir.original
                 ret.append(retdir)
+        for b in ret:
+            b.selected = True
         return sorted(ret)
 
     @property
