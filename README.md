@@ -37,7 +37,7 @@ output to the terminal:
 ```
 All pretty printing and ANSI color codes are printed to STDERR, while the actual file paths are printed to STDOUT. Therefore, suppressing STDERR output will only print the file paths with no ANSI escape sequences, pretty printing, or file sizes, which can be used for scripting:
 ```
-$ biggest /tmp/biggest
+$ biggest /tmp/biggest 2>/dev/null
 /tmp/biggest/LICENSE
 /tmp/biggest/.git/objects/pack/pack-d1412b54468648284c5681066c09b1ede986d24c.pack
 /tmp/biggest/.git/hooks
