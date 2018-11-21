@@ -199,7 +199,7 @@ class Directory(FilesystemObject):
 
     @property
     def children(self):
-        return tuple(self._children)
+        return tuple(sorted(self._children))
 
     @property
     def all_children(self):
