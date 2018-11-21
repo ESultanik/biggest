@@ -18,7 +18,12 @@ def main(argv = None):
     
     args = parser.parse_args(argv[1:])
 
-    tree.print_tree(biggest.Directory(args.directory, num_biggest=args.n, include_directories=not args.only_files), human_readable=args.human_readable)
+    directory = biggest.Directory(args.directory, num_biggest=args.n, include_directories=not args.only_files)
+    print(f"{directory.biggest()}")
+    for c in directory.biggest():
+        c.selected = True
+
+    tree.print_tree(directory, human_readable=args.human_readable)
 
 if __name__ == '__main__':
     main()

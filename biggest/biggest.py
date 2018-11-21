@@ -29,6 +29,12 @@ class FilesystemObject(object):
     @selected.setter
     def selected(self, is_selected):
         self._selected = is_selected
+        if self.parent is not None:
+            if self.has_selected:
+                self.parent._children.add(self)
+            elif self in self.parent._children:
+                self.parent._children.remove(self)
+            self.parent._recalculate_children()
 
     def __hash__(self):
         return hash(self.path)
@@ -69,27 +75,49 @@ class File(FilesystemObject):
     @property
     def children(self):
         return ()
+
+    @property
+    def all_children(self):
+        return ()
+
+    @property
+    def has_selected(self):
+        return self.selected
     
 class Directory(FilesystemObject):
     def __init__(self, path, parent=None, num_biggest=None, include_directories=True):
         if path.endswith('/'):
             path = path[:-1]
         super().__init__(path, parent=parent)
+        self._cached_biggest = None
         self._size = None
-        self._children = None
+        self._children = set()
         self._num_biggest = num_biggest
         self._all_children = None
         self._include_directories = include_directories
 
-    @FilesystemObject.selected.getter
-    def selected(self):
-        if super.selected():
-            return True
-        for child in self.children():
-            if child.selected():
-                return True
-        return False
-        
+    @property
+    def has_selected(self):
+        return self.selected or bool(self.children)
+
+    @FilesystemObject.selected.setter
+    def selected(self, is_selected):
+        FilesystemObject.selected.fset(self, is_selected)
+        self._recalculate_children()
+
+    def _recalculate_children(self):
+        if self.selected:
+            self._children = set(self.all_children)
+        else:
+            self._children = set(c for c in self._children if c.has_selected)
+        if self.parent is not None:
+            self.parent._recalculate_children()
+            if self.has_selected:
+                self.parent._children.add(self)
+            elif self in self.parent._children:
+                self.parent._children.remove(self)
+            assert not self.has_selected or self.parent.has_selected
+
     def _get_children(self):
         to_yield = []
         for child in os.scandir(self.path):
@@ -132,7 +160,13 @@ class Directory(FilesystemObject):
             biggest_directories = ()
         return biggest_files, biggest_directories
 
-    def biggest(self, n):
+    def biggest(self, n=None):
+        if n is None:
+            if self._cached_biggest is None:
+                if self._num_biggest is None:
+                    return self._get_children()
+                self._cached_biggest = self.biggest(self._num_biggest)
+            return self._cached_biggest
         biggest_files, biggest_directories = self._biggest(n)
         biggest_directories = MutableHeap(d for d in biggest_directories)
         ret = []
@@ -161,18 +195,19 @@ class Directory(FilesystemObject):
                 if isinstance(retdir, _ModifiedSize):
                     retdir = retdir.original
                 ret.append(retdir)
-        for b in ret:
-            b.selected = True
         return sorted(ret)
 
     @property
     def children(self):
-        if self._children is None:
-            if self._num_biggest is None:
-                self._children = tuple(self._get_children())
-            else:
-                self._children = tuple(self.biggest(self._num_biggest))
-        return self._children
+        return tuple(self._children)
+
+    @property
+    def all_children(self):
+        ret = set(self.children)
+        for c in self._get_children():
+            if c not in ret:
+                ret.add(c)
+        return tuple(sorted(ret))
 
     @property
     def size(self):

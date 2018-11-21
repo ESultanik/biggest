@@ -62,10 +62,12 @@ def _print_single(obj, stdout, stderr, parent_indents, last, parent, human_reada
 
 def _print_tree(directory, stdout, stderr, parent_indents=(), last=False, parent=None, human_readable=False, _biggest=None):
     if _biggest is None:
-        _biggest = frozenset(directory.children)
-    _print_single(directory, stdout, stderr, parent_indents, last, parent, human_readable=human_readable, biggest=_biggest)
-    for i, child in enumerate(directory.children):
-        last_child = i == len(directory.children) - 1
+        _biggest = frozenset(directory.biggest())
+    if not isinstance(directory, Directory) or directory.has_selected or (parent is not None and parent.selected):
+        _print_single(directory, stdout, stderr, parent_indents, last, parent, human_readable=human_readable, biggest=_biggest)
+    children = directory.children
+    for i, child in enumerate(children):
+        last_child = i == len(children) - 1
         _print_tree(child, stdout, stderr, parent_indents + ([True,False][last],), last=last_child, parent=directory, human_readable=human_readable, _biggest=_biggest)
     stderr.write(Style.RESET_ALL)
 
