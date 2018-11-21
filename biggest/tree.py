@@ -31,7 +31,7 @@ def _print_single(obj, stdout, stderr, parent_indents, last, parent, human_reada
             stderr.write('└── ')
         else:
             stderr.write('├── ')
-    size = obj.size
+    size = obj.total_size
     if human_readable:
         size = human_readable_size(size)
     stderr.write(f"{Style.NORMAL}{Fore.WHITE}[{Fore.RED}{size}{Fore.WHITE}]{Style.RESET_ALL} ")

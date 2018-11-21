@@ -73,6 +73,10 @@ class File(FilesystemObject):
         return self._size
 
     @property
+    def total_size(self):
+        return self.size
+
+    @property
     def children(self):
         return ()
 
@@ -91,6 +95,7 @@ class Directory(FilesystemObject):
         super().__init__(path, parent=parent)
         self._cached_biggest = None
         self._size = None
+        self._recursive_size = None
         self._children = set()
         self._num_biggest = num_biggest
         self._all_children = None
@@ -131,6 +136,7 @@ class Directory(FilesystemObject):
                 yield ret
         if self._size is None:
             self._size = sum(child.size for child in to_yield if isinstance(child, File))
+            self._recursive_size = sum(child.total_size for child in to_yield)
             for child in to_yield:
                 yield child
 
@@ -216,6 +222,13 @@ class Directory(FilesystemObject):
             tuple(self._get_children())
         return self._size
 
+    @property
+    def total_size(self):
+        if self._recursive_size is None:
+            # self._size is set when we enumerate our children
+            tuple(self._get_children())
+        return self._recursive_size
+    
 if __name__ == '__main__':
     import sys
     for path in sys.argv[1:]:
