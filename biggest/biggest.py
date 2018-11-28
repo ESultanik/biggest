@@ -177,8 +177,9 @@ class Directory(FilesystemObject):
         biggest_directories = MutableHeap(d for d in biggest_directories)
         ret = []
         returned_dirs = {}
+        _max_possible = len(biggest_files) + len(biggest_directories)
         while len(ret) < n and (biggest_files or biggest_directories):
-            if not biggest_directories or (biggest_files and biggest_directories.peek() >= biggest_files[0]):
+            if biggest_files and (not biggest_directories or biggest_directories.peek() <= biggest_files[0]):
                 biggest_file = biggest_files[0]
                 ret.append(biggest_file)
                 if biggest_file.parent in biggest_directories:
@@ -201,6 +202,7 @@ class Directory(FilesystemObject):
                 if isinstance(retdir, _ModifiedSize):
                     retdir = retdir.original
                 ret.append(retdir)
+        assert len(ret) == min(_max_possible, n)
         return sorted(ret)
 
     @property
