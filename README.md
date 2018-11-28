@@ -3,9 +3,11 @@
 A utility for finding the largest directories and/or files in a given
 directory hierarchy. Biggest supports pretty printed and colorized
 output to the terminal:
+
 ![Example of Biggest being run](docs/images/example.gif)
 
 All pretty printing and ANSI color codes are printed to STDERR, while the actual file paths are printed to STDOUT. Therefore, suppressing STDERR output will only print the file paths with no ANSI escape sequences, pretty printing, or file sizes, which can be used for scripting:
+
 ![Use Biggest in scripts by suppressing STDERR](docs/images/raw.gif)
 
 ## Installation
