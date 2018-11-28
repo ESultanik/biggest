@@ -116,11 +116,11 @@ class Directory(FilesystemObject):
         else:
             self._children = set(c for c in self._children if c.has_selected)
         if self.parent is not None:
-            self.parent._recalculate_children()
             if self.has_selected:
                 self.parent._children.add(self)
             elif self in self.parent._children:
                 self.parent._children.remove(self)
+            self.parent._recalculate_children()
             assert not self.has_selected or self.parent.has_selected
 
     def _get_children(self):
