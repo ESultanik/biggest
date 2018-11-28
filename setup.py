@@ -6,7 +6,7 @@ setup(
     description='A utility for finding the biggest files and/or directories in a directory tree',
     url='https://github.com/ESultanik/biggest',
     author='Evan Sultanik',
-    version='3.0.0',
+    version='3.0.1',
     packages=find_packages(),
     python_requires='>=3.6',
     install_requires=[
