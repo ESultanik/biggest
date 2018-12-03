@@ -28,4 +28,4 @@ Added pretty-printing with human-readable filesizes.
 
 ## 1.0.0 — 2007-12-17
 
-First release of NWD. Originally a Perl script.
+First release of Biggest. Originally a Perl script.
