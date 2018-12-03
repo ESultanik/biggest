@@ -1,7 +1,10 @@
 import heapq
 import os
+import sys
 
 from .heap import MutableHeap
+
+FAILED_PATHS = set()
 
 class FilesystemObject(object):
     def __init__(self, path, parent=None):
@@ -125,15 +128,20 @@ class Directory(FilesystemObject):
 
     def _get_children(self):
         to_yield = []
-        for child in os.scandir(self.path):
-            if child.is_dir(follow_symlinks=False):
-                ret = Directory(child.path, parent=self, num_biggest=self._num_biggest)
-            else:
-                ret = File(child.path, parent=self)
-            if self._size is None:
-                to_yield.append(ret)
-            else:
-                yield ret
+        try:
+            for child in os.scandir(self.path):
+                if child.is_dir(follow_symlinks=False):
+                    ret = Directory(child.path, parent=self, num_biggest=self._num_biggest)
+                else:
+                    ret = File(child.path, parent=self)
+                if self._size is None:
+                    to_yield.append(ret)
+                else:
+                    yield ret
+        except PermissionError:
+            if self.path not in FAILED_PATHS:
+                FAILED_PATHS.add(self.path)
+                sys.stderr.write(f"Warning: Permission denied reading {self.path}\n")
         if self._size is None:
             self._size = sum(child.size for child in to_yield if isinstance(child, File))
             self._recursive_size = sum(child.total_size for child in to_yield)
@@ -232,7 +240,6 @@ class Directory(FilesystemObject):
         return self._recursive_size
     
 if __name__ == '__main__':
-    import sys
     for path in sys.argv[1:]:
         for child in Directory(path, num_biggest=20).children:
             print(f"{child.size}\t{child.path}")
